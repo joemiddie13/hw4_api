@@ -2,7 +2,10 @@ body {
     background-color: #e6faff;
     display: flex;
     justify-content: center;
+    align-items: center;
+    height: 100vh;
     font-family: "Roboto", sans-serif;
+    margin: 0;
 }
 
 main {
@@ -11,7 +14,7 @@ main {
 
 main > section {
     background-color: #fff;
-    border: 1px solid #007a99;
+    border: 1px solid #129e37;
     box-shadow: 5px 5px 5px #999;
     padding: 20px;
     margin-top: 20px;

@@ -5,7 +5,6 @@ from pprint import PrettyPrinter
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, send_file
-from geopy.geocoders import Nominatim
 
 
 ################################################################################
@@ -47,7 +46,7 @@ def results():
     # parameters.
     city = request.args.get('city', '')
     units = request.args.get('units', '')
-
+    
     params = {
         # TODO: Enter query parameters here for the 'appid' (your api key),
         # the city, and the units (metric or imperial).
@@ -83,18 +82,34 @@ def results():
 
     return render_template('results.html', **context)
 
+# From the HINT: create a helper function
+def get_weather_data(city, units):
+    params = {
+        'q': city,
+        'units': units,
+        'appid': API_KEY
+    }
+    response = requests.get(API_URL, params=params)
+    return response.json()
 
 @app.route('/comparison_results')
 def comparison_results():
     """Displays the relative weather for 2 different cities."""
     # TODO: Use 'request.args' to retrieve the cities & units from the query
     # parameters.
-    city1 = ''
-    city2 = ''
-    units = ''
+    city1 = request.args.get('city1', '')
+    city2 = request.args.get('city2', '')
+    units = request.args.get('units', '')
 
     # TODO: Make 2 API calls, one for each city. HINT: You may want to write a 
     # helper function for this!
+    city1_data = get_weather_data(city1, units)
+    city2_data = get_weather_data(city2, units)
+
+    temp_city1 = city1_data['main']['temp']
+    temp_city2 = city2_data['main']['temp']
+    temp_difference = temp_city1 - temp_city2
+    warmer_city = city1 if temp_difference > 0 else city2
 
 
     # TODO: Pass the information for both cities in the context. Make sure to
@@ -102,11 +117,25 @@ def comparison_results():
     # HINT: It may be useful to create 2 new dictionaries, `city1_info` and 
     # `city2_info`, to organize the data.
     context = {
-
+         'date': datetime.now(),
+        'city1': city1_data['name'],
+        'city2': city2_data['name'],
+        'temp_city1': city1_data['main']['temp'],
+        'temp_city2': city2_data['main']['temp'],
+        'humidity_city1': city1_data['main']['humidity'],
+        'humidity_city2': city2_data['main']['humidity'],
+        'wind_speed_city1': city1_data['wind']['speed'],
+        'wind_speed_city2': city2_data['wind']['speed'],
+        'sunset_city1': datetime.fromtimestamp(city1_data['sys']['sunset']),
+        'sunset_city2': datetime.fromtimestamp(city2_data['sys']['sunset']),
+        'units_letter': get_letter_for_units(units)
     }
 
     return render_template('comparison_results.html', **context)
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 if __name__ == '__main__':
     app.config['ENV'] = 'development'
